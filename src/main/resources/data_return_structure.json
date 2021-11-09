@@ -1,0 +1,77 @@
+{
+  "DocumentMetadata": {
+    "Pages": number
+  },
+  "ExpenseDocuments": [
+    {
+      "ExpenseIndex": number,
+      "LineItemGroups": [
+        {
+          "LineItemGroupIndex": number,
+          "LineItems": [
+            {
+              "LineItemExpenseFields": [
+                {
+                  "LabelDetection": {
+                    "Confidence": number,
+                    "BoundingBox": {
+                      "Height": number,
+                      "Left": number,
+                      "Top": number,
+                      "Width": number
+                      },
+                    "Text": "string"
+                  },
+//                  "PageNumber": number,
+                  "Type": {
+                    "Confidence": number,
+                    "Text": "string"
+                  },
+                  "ValueDetection": {
+                    "Confidence": number,
+                    "BoundingBox": {
+                      "Height": number,
+                      "Left": number,
+                      "Top": number,
+                      "Width": number
+                    },
+                    "Text": "string"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "SummaryFields": [
+        {
+          "LabelDetection": {
+            "Confidence": number,
+            "BoundingBox": {
+              "Height": number,
+              "Left": number,
+              "Top": number,
+              "Width": number
+            },
+            "Text": "string"
+          },
+//          "PageNumber": number,
+          "Type": {
+            "Confidence": number,
+            "Text": "string"
+          },
+          "ValueDetection": {
+            "Confidence": number,
+            "BoundingBox": {
+              "Height": number,
+              "Left": number,
+              "Top": number,
+              "Width": number
+              },
+            "Text": "string"
+          }
+        }
+      ]
+    }
+  ]
+}

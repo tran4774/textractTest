@@ -9,108 +9,151 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.textract.TextractClient;
-import software.amazon.awssdk.services.textract.model.AnalyzeDocumentRequest;
-import software.amazon.awssdk.services.textract.model.AnalyzeDocumentResponse;
-import software.amazon.awssdk.services.textract.model.Block;
-import software.amazon.awssdk.services.textract.model.Document;
-import software.amazon.awssdk.services.textract.model.EntityType;
-import software.amazon.awssdk.services.textract.model.FeatureType;
-import software.amazon.awssdk.services.textract.model.Relationship;
+import software.amazon.awssdk.services.textract.model.*;
+
 
 public class App {
 
-  public static Map<String, String> getRelationships(Map<String, Block> blockMap,
-      Map<String, Block> keyMap, Map<String, Block> valueMap) {
-    Map<String, String> results = new LinkedHashMap<>();
-    for (Map.Entry<String, Block> itr : keyMap.entrySet()) {
-      Block valueBlock = findValue(itr.getValue(), valueMap);
-      String key = getText(itr.getValue(), blockMap);
-      String value = getText(valueBlock, blockMap);
-      results.put(key, value);
-    }
-    return results;
-  }
+    private static void DisplayAnalyzeExpenseSummaryInfo(ExpenseDocument expensedocument) {
+        System.out.println("	ExpenseId : " + expensedocument.expenseIndex());
+        System.out.println("    Expense Summary information:");
+        if (expensedocument.hasSummaryFields()) {
 
-  public static Block findValue(Block keyBlock, Map<String, Block> valueMap) {
-    Block b = null;
-    for (Relationship relationship : keyBlock.relationships()) {
-      if (relationship.type().toString().equals("VALUE")) {
-        for (String id : relationship.ids()) {
-          b = valueMap.get(id);
+            List<ExpenseField> summaryfields = expensedocument.summaryFields();
+
+            for (ExpenseField summaryfield : summaryfields) {
+
+                System.out.println("    Page: " + summaryfield.pageNumber());
+                if (summaryfield.type() != null) {
+
+                    System.out.println("    Expense Summary Field Type:" + summaryfield.type().text());
+
+                }
+                if (summaryfield.labelDetection() != null) {
+
+                    System.out.println("    Expense Summary Field Label:" + summaryfield.labelDetection().text());
+                    //Bỏ Geometry, Polygon, đưa boudingbox ra ngoài cùng cấp vs Text
+                    //System.out.println("    Geometry");
+                    System.out.println("        Bounding Box: "
+                            + summaryfield.labelDetection().geometry().boundingBox().toString());
+//                    System.out.println(
+//                            "        Polygon: " + summaryfield.labelDetection().geometry().polygon().toString());
+
+                }
+                if (summaryfield.valueDetection() != null) {
+                    System.out.println("    Expense Summary Field Value:" + summaryfield.valueDetection().text());
+                    //Bỏ Geometry, đưa boudingbox ra ngoài cùng cấp vs Text
+//                    System.out.println("    Geometry");
+                    System.out.println("        Bounding Box: "
+                            + summaryfield.valueDetection().geometry().boundingBox().toString());
+//                    System.out.println(
+//                            "        Polygon: " + summaryfield.valueDetection().geometry().polygon().toString());
+
+                }
+
+            }
+
         }
-      }
-    }
-    return b;
-  }
 
-  public static String getText(Block result, Map<String, Block> blockMap) {
-    StringBuilder stringBuilder = new StringBuilder();
-    for (Relationship relationship : result.relationships()) {
-      if (relationship.type().toString().equals("CHILD")) {
-        for (String id : relationship.ids()) {
-          Block b = blockMap.get(id);
-          if (b.blockTypeAsString().equals("WORD")) {
-            stringBuilder.append(b.text()).append(" ");
-          }
+    }
+
+    private static void DisplayAnalyzeExpenseLineItemGroupsInfo(ExpenseDocument expensedocument) {
+
+        System.out.println("	ExpenseId : " + expensedocument.expenseIndex());
+        System.out.println("    Expense LineItemGroups information:");
+
+        if (expensedocument.hasLineItemGroups()) {
+
+            List<LineItemGroup> lineitemgroups = expensedocument.lineItemGroups();
+
+            for (LineItemGroup lineitemgroup : lineitemgroups) {
+
+                System.out.println("    Expense LineItemGroupsIndexID :" + lineitemgroup.lineItemGroupIndex());
+
+                if (lineitemgroup.hasLineItems()) {
+
+                    List<LineItemFields> lineItems = lineitemgroup.lineItems();
+
+                    for (LineItemFields lineitemfield : lineItems) {
+
+                        if (lineitemfield.hasLineItemExpenseFields()) {
+
+                            List<ExpenseField> expensefields = lineitemfield.lineItemExpenseFields();
+                            for (ExpenseField expensefield : expensefields) {
+
+                                if (expensefield.type() != null) {
+                                    System.out.println("    Expense LineItem Field Type:" + expensefield.type().text());
+
+                                }
+
+                                if (expensefield.valueDetection() != null) {
+                                    System.out.println(
+                                            "    Expense Summary Field Value:" + expensefield.valueDetection().text());
+                                    //Bỏ Geometry, đưa boudingbox ra ngoài cùng cấp vs Text
+//                                    System.out.println("    Geometry");
+                                    System.out.println("        Bounding Box: "
+                                            + expensefield.valueDetection().geometry().boundingBox().toString());
+//                                    System.out.println("        Polygon: "
+//                                            + expensefield.valueDetection().geometry().polygon().toString());
+
+                                }
+
+                                if (expensefield.labelDetection() != null) {
+                                    System.out.println(
+                                            "    Expense LineItem Field Label:" + expensefield.labelDetection().text());
+                                    //Bỏ Geometry, đưa boudingbox ra ngoài cùng cấp vs Text
+//                                    System.out.println("    Geometry");
+                                    System.out.println("        Bounding Box: "
+                                            + expensefield.labelDetection().geometry().boundingBox().toString());
+//                                    System.out.println("        Polygon: "
+//                                            + expensefield.labelDetection().geometry().polygon().toString());
+                                }
+
+                            }
+                        }
+
+                    }
+
+                }
+            }
         }
-      }
-    }
-    return stringBuilder.toString();
-  }
-
-  public static void main(String[] args) {
-    //    AmazonS3 s3client = AmazonS3ClientBuilder.standard().build();
-//    S3Object s3Object = s3client.getObject("myjavatextract", "invoice-sample.png");
-//    S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
-    ByteArrayOutputStream os = new ByteArrayOutputStream();
-    File initialFile = new File("src/main/resources/bill_7eleven.jpg");
-    InputStream fis = null;
-    try {
-      fis = new FileInputStream(initialFile);
-      System.out.println(fis);
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
     }
 
-    SdkBytes bytes = SdkBytes.fromInputStream(fis);
+    public static void main(String[] args) {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        File initialFile = new File("src/main/resources/fedex-receipt.jpg");
+        InputStream fis = null;
+        try {
+            fis = new FileInputStream(initialFile);
+            System.out.println(fis);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        SdkBytes bytes = SdkBytes.fromInputStream(fis);
 //
-    Document doc = Document.builder().bytes(bytes).build();
+        Document doc = Document.builder().bytes(bytes).build();
 
-    List<FeatureType> list = new ArrayList<>();
+        List<FeatureType> list = new ArrayList<>();
 
-    list.add(FeatureType.FORMS);
+        list.add(FeatureType.FORMS);
 
-    AnalyzeDocumentRequest request = AnalyzeDocumentRequest.builder().featureTypes(list)
-        .document(doc).build();
+        TextractClient textractClient = TextractClient.builder().region(Region.US_EAST_1).build();
 
-    TextractClient textractClient = TextractClient.builder().region(Region.US_EAST_1).build();
+        AnalyzeExpenseRequest request = AnalyzeExpenseRequest.builder().document(doc).build();
 
-    AnalyzeDocumentResponse response = textractClient.analyzeDocument(request);
+        AnalyzeExpenseResponse response = textractClient.analyzeExpense(request);
 
-    List<Block> blocks = response.blocks();
-
-
-    Map<String, Block> blockMap = new LinkedHashMap<>();
-    Map<String, Block> keyMap = new LinkedHashMap<>();
-    Map<String, Block> valueMap = new LinkedHashMap<>();
-
-    for (Block b : blocks) {
-      String block_id = b.id();
-      blockMap.put(block_id, b);
-      if (b.blockTypeAsString().equals("KEY_VALUE_SET")) {
-        for (EntityType entityType : b.entityTypes()) {
-          if (entityType.toString().equals("KEY")) {
-            keyMap.put(block_id, b);
-          } else {
-            valueMap.put(block_id, b);
-          }
+        //ExpenseDocument test = response.expenseDocuments().get(0).summaryFields()
+        List<ExpenseDocument> test = response.expenseDocuments();
+        for (ExpenseDocument exd : test) {
+            DisplayAnalyzeExpenseSummaryInfo(exd);
+            DisplayAnalyzeExpenseLineItemGroupsInfo(exd);
         }
-      }
+        textractClient.close();
     }
-    System.out.println(getRelationships(blockMap, keyMap, valueMap));
-    textractClient.close();
-  }
 }
